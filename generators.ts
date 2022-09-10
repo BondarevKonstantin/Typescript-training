@@ -80,18 +80,59 @@ function* fibonacciGenerator() {
       yield value;
     }
   } finally {
-    console.log('Cleaning up');
+    // console.log('Cleaning up');
   }
 }
 
 const fibonacciIterator = fibonacciGenerator();
 
 for (let i of fibonacciIterator) {
-  console.log(i);
+  // console.log(i);
+  // 1 1 2 3 5 8 13 21 34 55 Cleaning up
 
   if (i > 50) {
     // We don't need the "break" command here
     fibonacciIterator.return();
   }
-  // 1 1 2 3 5 8 13 21 34 55 Cleaning up
 }
+
+// =================================================
+//            Async work with generators
+// =================================================
+
+// This function is indended to mimic the "fetch" function
+
+type ServerData = {
+  subject: string;
+};
+
+const fakeFetch = (isGoodResponse: boolean = true): Promise<ServerData> =>
+  new Promise((resolve, reject) => {
+    const serverData: ServerData = { subject: 'generators' };
+    const errorMessage = 'Could not fetch data from the server';
+
+    if (isGoodResponse) setTimeout(() => resolve(serverData), 1000);
+    else setTimeout(() => reject(errorMessage), 1000);
+  });
+
+// Let's try to recreate async/await feautre with generators
+
+function* simpleAsyncGenerator(): Generator<Promise<ServerData>> {
+  try {
+    // Yield promise to the variable below to continue the sync code after it resolves
+    const fetchedSubject = yield fakeFetch();
+    // Couldn't have done console log without generators or async/await
+    // console.log(fetchedSubject); // { subject: 'generators' }
+  } catch (err) {
+    // console.error(err); // Could not fetch data from the server
+  }
+}
+
+const simpleAsyncIterator = simpleAsyncGenerator();
+const simplePromise = simpleAsyncIterator.next().value;
+
+simplePromise
+  .then((fetchedData: { subject: string }) => {
+    simpleAsyncIterator.next(fetchedData);
+  })
+  .catch((err: Error) => simpleAsyncIterator.throw(err));

@@ -62,15 +62,42 @@ function* fibonacciGenerator() {
         }
     }
     finally {
-        console.log('Cleaning up');
+        // console.log('Cleaning up');
     }
 }
 const fibonacciIterator = fibonacciGenerator();
 for (let i of fibonacciIterator) {
-    console.log(i);
+    // console.log(i);
+    // 1 1 2 3 5 8 13 21 34 55 Cleaning up
     if (i > 50) {
         // We don't need the "break" command here
         fibonacciIterator.return();
     }
-    // 1 1 2 3 5 8 13 21 34 55 Cleaning up
 }
+const fakeFetch = (isGoodResponse = true) => new Promise((resolve, reject) => {
+    const serverData = { subject: 'generators' };
+    const errorMessage = 'Could not fetch data from the server';
+    if (isGoodResponse)
+        setTimeout(() => resolve(serverData), 1000);
+    else
+        setTimeout(() => reject(errorMessage), 1000);
+});
+// Let's try to recreate async/await feautre with generators
+function* simpleAsyncGenerator() {
+    try {
+        // Yield promise to the variable below to continue the sync code after it resolves
+        const fetchedSubject = yield fakeFetch();
+        // Couldn't have done console log without generators or async/await
+        // console.log(fetchedSubject); // { subject: 'generators' }
+    }
+    catch (err) {
+        // console.error(err); // Could not fetch data from the server
+    }
+}
+const simpleAsyncIterator = simpleAsyncGenerator();
+const simplePromise = simpleAsyncIterator.next().value;
+simplePromise
+    .then((fetchedData) => {
+    simpleAsyncIterator.next(fetchedData);
+})
+    .catch((err) => simpleAsyncIterator.throw(err));
