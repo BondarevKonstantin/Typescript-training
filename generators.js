@@ -74,6 +74,29 @@ for (let i of fibonacciIterator) {
         fibonacciIterator.return();
     }
 }
+// =================================================
+//            Generators are iterative
+// =================================================
+function* iterativeGenerator() {
+    yield 1;
+    const message = 'Any code works when generator is iterating!';
+    yield 2;
+    console.log(message);
+    yield 3;
+}
+const newSequence = [0, ...iterativeGenerator(), 4]; // Any code works when generator is iterating!
+// console.log(newSequence); // [0, 1, 2, 3, 4]
+// Now we can use this to set some new interfaces
+const genRange = {
+    from: 1,
+    to: 10,
+    *[Symbol.iterator]() {
+        for (let value = this.from; value <= this.to; value++) {
+            yield value;
+        }
+    },
+};
+console.log(...genRange);
 const fakeFetch = (isGoodResponse = true) => new Promise((resolve, reject) => {
     const serverData = { subject: 'generators' };
     const errorMessage = 'Could not fetch data from the server';
@@ -101,3 +124,25 @@ simplePromise
     simpleAsyncIterator.next(fetchedData);
 })
     .catch((err) => simpleAsyncIterator.throw(err));
+// =================================================
+//                Yield delegation
+// =================================================
+// Now let's go for some wtf stuff
+function* innerDelegationGenerator() {
+    console.log('Inner delegation function started');
+    yield 2;
+    yield 3;
+    console.log('Inner delegation function finished');
+}
+function* outerDelegationGenerator() {
+    yield 1;
+    // Fall in the other generator
+    yield* innerDelegationGenerator(); // Also works with any other iterator - [2, 3]
+    // Back here when the other generator is done
+    yield 4;
+}
+const delegationIterator = outerDelegationGenerator();
+delegationIterator.next().value; // 1
+delegationIterator.next().value; // Start, 2
+delegationIterator.next().value; // 3, finish
+delegationIterator.next().value; // 4
